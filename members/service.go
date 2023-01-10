@@ -9,18 +9,21 @@ import (
 type MemberService interface {
 	SignOn(dto SignOnDto) (int64, error)
 	GetTokenBySignIn(dto SignInDto) (string, error)
-	GetMemberByToken(token string) (*jwt.AuthTokenClaims, error)
 	FindMember(id int64) (FindDto, error)
 	FindByEmail(email string) (FindDto, error)
+
+	ValidToken(token string) error
+	Logout(token string) error
 }
 
 type MemberServiceImpl struct {
 	command Command
 	query   Query
+	rds     R
 }
 
-func NewService(command Command, query Query) MemberService {
-	return MemberServiceImpl{command, query}
+func NewService(command Command, query Query, r R) MemberService {
+	return MemberServiceImpl{command, query, r}
 }
 
 func (s MemberServiceImpl) SignOn(dto SignOnDto) (int64, error) {
@@ -80,8 +83,12 @@ func (s MemberServiceImpl) GetTokenBySignIn(dto SignInDto) (string, error) {
 	return jwt.CreateToken(m.ID, m.Email)
 }
 
-func (s MemberServiceImpl) GetMemberByToken(token string) (*jwt.AuthTokenClaims, error) {
-	return jwt.GetClaimsByTokenString(token)
+func (s MemberServiceImpl) ValidToken(token string) error {
+	return s.rds.Valid(token)
+}
+
+func (s MemberServiceImpl) Logout(token string) error {
+	return s.rds.Logout(token)
 }
 
 func (s MemberServiceImpl) FindMember(id int64) (FindDto, error) {
