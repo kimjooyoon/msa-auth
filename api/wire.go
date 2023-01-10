@@ -5,6 +5,7 @@ package api
 
 import (
 	"github.com/google/wire"
+	"msa-auth/cache"
 	"msa-auth/database"
 	"msa-auth/members"
 )
@@ -17,6 +18,9 @@ func InitializeMemberHandler() members.Controller {
 		members.NewQuery,
 		database.MysqlConnection,
 		database.MysqlNewDSN,
+		cache.RedisConnection,
+		cache.NewRedisContext,
+		members.NewRedis,
 	)
 
 	return members.Controller{}
