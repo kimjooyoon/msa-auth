@@ -3,6 +3,7 @@ package cache
 import (
 	context2 "context"
 	"github.com/go-redis/redis/v9"
+	"os"
 )
 
 var rds *redis.Client
@@ -19,13 +20,19 @@ func NewRedisContext() Context {
 	return ctx
 }
 
+type DSN string
+
+func RedisNewDSN() DSN {
+	return DSN(os.Getenv("REDIS_DSN"))
+}
+
 func RedisConnection() *redis.Client {
 	if rds != nil {
 		return rds
 	}
 
 	rds = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     string(RedisNewDSN()),
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
