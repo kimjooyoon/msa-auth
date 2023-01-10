@@ -1,0 +1,59 @@
+name: Release Push
+
+on:
+  push:
+    branches: [ 'release' ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.PACKAGE_KEY }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+      - name: Install go/wire
+        run: go install github.com/google/wire/cmd/wire@latest
+
+      - name: Set go/wire
+        run: make di
+
+      - name: Setup Dot Env App/Migrate
+        run: echo "${{ secrets.DOTENV }}" > .env
+      - name: Build App
+        run: go build -v ./...
+
+      - name: Build and push Docker App image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Build and push Docker Migrate image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: migrate.dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrate:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrate:${{ github.sha }}
+
