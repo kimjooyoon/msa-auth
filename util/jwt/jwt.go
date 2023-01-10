@@ -13,12 +13,14 @@ type AuthTokenClaims struct {
 	jwt.StandardClaims
 }
 
+const ExpiresTime = time.Hour * 1
+
 func CreateToken(userId int64, email string) (string, error) {
 	at := AuthTokenClaims{
 		UserID: userId,
 		Email:  email,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: jwt.At(time.Now().Add(time.Hour * 15)),
+			ExpiresAt: jwt.At(time.Now().Add(ExpiresTime)),
 		},
 	}
 
@@ -42,12 +44,4 @@ func GetClaimsByTokenString(tokenString string) (*AuthTokenClaims, error) {
 	}
 
 	return &claims, nil
-}
-
-func GetClaimsByToken(hToken []string) (*AuthTokenClaims, error) {
-	tkn := hToken[0]
-	if len(hToken) == 0 {
-		return nil, errors.New("not found token")
-	}
-	return GetClaimsByTokenString(tkn)
 }
