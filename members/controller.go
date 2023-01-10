@@ -2,6 +2,7 @@ package members
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"io"
 	"msa-auth/util/api"
@@ -64,6 +65,37 @@ func (r Controller) SignIn(c *gin.Context) {
 	c.Header("token", tkn)
 	c.JSON(api.OkWithToken(tkn))
 	return
+}
+
+func (r Controller) Logout(c *gin.Context) {
+	hToken := c.Request.Header["Token"]
+	if len(hToken) == 0 {
+		c.JSON(api.ServerError())
+		return
+	}
+
+	err1 := r.service.Logout(hToken[0])
+	if err1 != nil {
+		c.JSON(api.ServerErrorWithError(err1))
+		return
+	}
+	c.JSON(api.Ok())
+	return
+}
+
+func (r Controller) getClaims(c *gin.Context) (*jwt.AuthTokenClaims, error) {
+	hToken := c.Request.Header["Token"]
+	if len(hToken) == 0 {
+		return nil, errors.New("not exists token")
+	}
+	tkn := hToken[0]
+
+	err1 := r.service.ValidToken(tkn)
+	if err1 != nil {
+		return nil, err1
+	}
+
+	return jwt.GetClaimsByTokenString(tkn)
 }
 
 func getSignInDto(closer io.ReadCloser) (*SignInDto, error) {
