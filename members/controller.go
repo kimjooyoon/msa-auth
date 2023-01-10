@@ -114,14 +114,11 @@ func getSignInDto(closer io.ReadCloser) (*SignInDto, error) {
 }
 
 func (r Controller) MyInfo(c *gin.Context) {
-	hToken := c.Request.Header["Token"]
-	if len(hToken) == 0 {
-		c.JSON(api.ServerError())
+	m, err1 := r.getClaims(c)
+	if err1 != nil {
+		c.JSON(api.ServerErrorWithError(err1))
 		return
 	}
-	tkn := hToken[0]
-	m, err1 := jwt.GetClaimsByTokenString(tkn)
-
 	if err1 != nil {
 		c.JSON(api.ServerError())
 		return
