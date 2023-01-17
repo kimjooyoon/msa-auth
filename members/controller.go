@@ -95,6 +95,20 @@ func getSignInDto(closer io.ReadCloser) (*SignInDto, error) {
 	return getDto(closer, dto)
 }
 
+func getDto[T dtoType](closer io.ReadCloser, dto T) (*T, error) {
+	jsonData, err1 := io.ReadAll(closer)
+	if err1 != nil {
+		return nil, err1
+	}
+
+	err2 := json.Unmarshal(jsonData, &dto)
+	if err2 != nil {
+		return nil, err2
+	}
+
+	return getDto(closer, dto)
+}
+
 func (r Controller) MyInfo(c *gin.Context) {
 	m, err1 := r.getClaims(c)
 	if err1 != nil {
