@@ -36,18 +36,9 @@ func (r Controller) SignOn(c *gin.Context) {
 }
 
 func getSignOnDto(closer io.ReadCloser) (*SignOnDto, error) {
-	jsonData, err1 := io.ReadAll(closer)
-	if err1 != nil {
-		return nil, err1
-	}
-
 	var dto SignOnDto
-	err2 := json.Unmarshal(jsonData, &dto)
-	if err2 != nil {
-		return nil, err2
-	}
 
-	return &dto, nil
+	return getDto(closer, dto)
 }
 
 func (r Controller) SignIn(c *gin.Context) {
@@ -99,18 +90,9 @@ func (r Controller) getClaims(c *gin.Context) (*jwt.AuthTokenClaims, error) {
 }
 
 func getSignInDto(closer io.ReadCloser) (*SignInDto, error) {
-	jsonData, err1 := io.ReadAll(closer)
-	if err1 != nil {
-		return nil, err1
-	}
-
 	var dto SignInDto
-	err2 := json.Unmarshal(jsonData, &dto)
-	if err2 != nil {
-		return nil, err2
-	}
 
-	return &dto, nil
+	return getDto(closer, dto)
 }
 
 func (r Controller) MyInfo(c *gin.Context) {
