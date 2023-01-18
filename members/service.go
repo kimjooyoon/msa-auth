@@ -4,6 +4,7 @@ import (
 	"errors"
 	"golang.org/x/crypto/bcrypt"
 	"msa-auth/util/jwt"
+	"time"
 )
 
 type MemberService interface {
@@ -14,6 +15,8 @@ type MemberService interface {
 
 	ValidToken(token string) error
 	Logout(token string) error
+
+	UpdateMyInfo(id int64, dto UpdateMyInfoDto) error
 }
 
 type MemberServiceImpl struct {
@@ -119,4 +122,28 @@ func (s MemberServiceImpl) FindByEmail(email string) (FindDto, error) {
 		NickName: m.NickName,
 		Call:     m.Call,
 	}, nil
+}
+
+func (s MemberServiceImpl) UpdateMyInfo(id int64, dto UpdateMyInfoDto) error {
+	member, err1 := s.query.FindById(id)
+	if err1 != nil {
+		return err1
+	}
+
+	hashedPassword, err2 := bcrypt.GenerateFromPassword([]byte(dto.Password), 10)
+	if err2 != nil {
+		return err2
+	}
+
+	member.Password = string(hashedPassword)
+	member.Name = dto.Name
+	member.NickName = dto.NickName
+	member.Call = dto.Call
+	member.UpdatedAt = time.Now()
+
+	err3 := s.command.Update(*member)
+	if err3 != nil {
+		return err3
+	}
+	return nil
 }
