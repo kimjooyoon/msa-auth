@@ -157,3 +157,31 @@ func (r Controller) SearchByEmail(c *gin.Context) {
 	c.JSON(api.OkWithObject(dto))
 	return
 }
+
+func (r Controller) MyInfoUpdate(c *gin.Context) {
+	m, err1 := r.getClaims(c)
+	if err1 != nil {
+		c.JSON(api.ServerErrorWithError(err1))
+		return
+	}
+	dto, err2 := getUpdateMyInfoDto(c.Request.Body)
+	if err2 != nil {
+		c.JSON(api.ServerErrorWithError(err2))
+		return
+	}
+
+	err3 := r.service.UpdateMyInfo(m.UserID, *dto)
+	if err3 != nil {
+		c.JSON(api.ServerErrorWithError(err3))
+		return
+	}
+
+	c.JSON(api.Ok())
+	return
+}
+
+func getUpdateMyInfoDto(closer io.ReadCloser) (*UpdateMyInfoDto, error) {
+	var dto UpdateMyInfoDto
+
+	return getDto(closer, dto)
+}
