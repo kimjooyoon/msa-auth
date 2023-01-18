@@ -5,6 +5,11 @@ import (
 )
 
 type mockCommand struct{}
+
+func (m mockCommand) Update(members Members) error {
+	return nil
+}
+
 type mockQuery struct{}
 
 func (q mockQuery) FindById(id int64) (m *Members, e error) {
