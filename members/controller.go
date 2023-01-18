@@ -106,7 +106,7 @@ func getDto[T dtoType](closer io.ReadCloser, dto T) (*T, error) {
 		return nil, err2
 	}
 
-	return getDto(closer, dto)
+	return &dto, nil
 }
 
 func (r Controller) MyInfo(c *gin.Context) {
