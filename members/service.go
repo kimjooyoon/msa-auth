@@ -97,7 +97,6 @@ func (s MemberServiceImpl) Logout(token string) error {
 func (s MemberServiceImpl) FindMember(id int64) (FindDto, error) {
 	m, err1 := s.query.FindById(id)
 	if err1 != nil {
-		//todo: Test
 		return FindDto{}, err1
 	}
 
