@@ -37,14 +37,17 @@ func (s MemberServiceImpl) SignOn(dto SignOnDto) (int64, error) {
 
 	count, err1 := s.query.CountByEmail(dto.Email)
 	if count > 0 {
+		//todo: Test
 		return 0, errors.New("already email")
 	}
 	if err1 != nil {
+		//todo: Test
 		return 0, err1
 	}
 
 	hashedPassword, err2 := bcrypt.GenerateFromPassword([]byte(dto.Password), 10)
 	if err2 != nil {
+		//todo: Test
 		return 0, err2
 	}
 	return s.command.Create(Members{
@@ -64,39 +67,50 @@ func signOnValid(dto SignOnDto) error {
 		return errors.New("not valid email")
 	}
 	if dto.Name == "" {
+		//todo: Test
 		return errors.New("not valid name")
 	}
 	if dto.NickName == "" {
+		//todo: Test
 		return errors.New("not valid nick-name")
 	}
 	if dto.Call == "" {
+		//todo: Test
 		return errors.New("not valid call")
 	}
 	return nil
 }
 
 func (s MemberServiceImpl) GetTokenBySignIn(dto SignInDto) (string, error) {
+	//todo: Test
 	m, err1 := s.query.FindByEmail(dto.Email)
 	if err1 != nil {
+		//todo: Test
 		return "", err1
 	}
 	if err2 := bcrypt.CompareHashAndPassword([]byte(m.Password), []byte(dto.Password)); err2 != nil {
+		//todo: Test
 		return "", err2
 	}
+	//todo: Test
 	return jwt.CreateToken(m.ID, m.Email)
 }
 
 func (s MemberServiceImpl) ValidToken(token string) error {
+	//todo: Test
 	return s.rds.Valid(token)
 }
 
 func (s MemberServiceImpl) Logout(token string) error {
+	//todo: Test
 	return s.rds.Logout(token)
 }
 
 func (s MemberServiceImpl) FindMember(id int64) (FindDto, error) {
+	//todo: Test
 	m, err1 := s.query.FindById(id)
 	if err1 != nil {
+		//todo: Test
 		return FindDto{}, err1
 	}
 
