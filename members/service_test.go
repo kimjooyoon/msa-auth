@@ -480,3 +480,36 @@ func TestMemberServiceImpl_ValidToken(t *testing.T) {
 		})
 	}
 }
+
+func TestMemberServiceImpl_Logout(t *testing.T) {
+	type fields struct {
+		command Command
+		query   Query
+		rds     R
+	}
+	type args struct {
+		token string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"success", fields{nil, nil, mockRds{}},
+			args{}, false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := MemberServiceImpl{
+				command: tt.fields.command,
+				query:   tt.fields.query,
+				rds:     tt.fields.rds,
+			}
+			if err := s.Logout(tt.args.token); (err != nil) != tt.wantErr {
+				t.Errorf("Logout() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

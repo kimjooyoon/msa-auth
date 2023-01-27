@@ -91,7 +91,6 @@ func (s MemberServiceImpl) ValidToken(token string) error {
 }
 
 func (s MemberServiceImpl) Logout(token string) error {
-	//todo: Test
 	return s.rds.Logout(token)
 }
 
