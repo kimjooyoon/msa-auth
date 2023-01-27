@@ -81,7 +81,6 @@ func (s MemberServiceImpl) GetTokenBySignIn(dto SignInDto) (string, error) {
 		return "", err1
 	}
 	if err2 := bcrypt.CompareHashAndPassword([]byte(m.Password), []byte(dto.Password)); err2 != nil {
-		//todo: Test
 		return "", err2
 	}
 	return jwt.CreateToken(m.ID, m.Email)

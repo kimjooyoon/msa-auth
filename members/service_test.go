@@ -403,6 +403,17 @@ func TestMemberServiceImpl_GetTokenBySignIn_Failed(t *testing.T) {
 			}},
 			true,
 		},
+		{"failed, bcrypt error", fields{
+			command: mockCommand{},
+			query:   mockQuery{},
+			rds:     nil,
+		},
+			args{SignInDto{
+				Email:    "fail@fail.fail",
+				Password: "fail",
+			}},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
