@@ -714,3 +714,27 @@ func TestMemberServiceImpl_UpdateMyInfo(t *testing.T) {
 		})
 	}
 }
+
+func TestNewService(t *testing.T) {
+	type args struct {
+		command Command
+		query   Query
+		r       R
+	}
+	tests := []struct {
+		name string
+		args args
+		want MemberService
+	}{
+		{"success", args{mockCommand{}, mockQuery{}, mockRds{}},
+			MemberServiceImpl{mockCommand{}, mockQuery{}, mockRds{}}},
+		{"success, empty", args{}, MemberServiceImpl{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewService(tt.args.command, tt.args.query, tt.args.r); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewService() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
