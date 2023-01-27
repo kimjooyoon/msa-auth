@@ -1,6 +1,7 @@
 package members
 
 import (
+	"errors"
 	"testing"
 )
 
@@ -178,7 +179,10 @@ func (q mockQueryFailed) FindById(id int64) (m *Members, e error) {
 	return &Members{}, nil
 }
 
-func (q mockQueryFailed) CountByEmail(string) (int64, error) {
+func (q mockQueryFailed) CountByEmail(email string) (int64, error) {
+	if email == "admin@test.test" {
+		return 0, errors.New("CountByEmail error")
+	}
 	return 100, nil
 }
 func (q mockQueryFailed) FindByEmail(_ string) (m *Members, e error) {
@@ -209,6 +213,22 @@ func TestMemberServiceImpl_SignOn_Failed(t *testing.T) {
 			},
 			args{dto: SignOnDto{
 				Email:    "asketeddy@gmail.com",
+				Password: "test1234",
+				Name:     "tester",
+				NickName: "nick",
+				Call:     "010-0000-0000",
+			}},
+			0,
+			true,
+		},
+		{"fail, query error",
+			fields{
+				command: mockCommand{},
+				query:   mockQueryFailed{},
+				rds:     nil,
+			},
+			args{dto: SignOnDto{
+				Email:    "admin@test.test",
 				Password: "test1234",
 				Name:     "tester",
 				NickName: "nick",
