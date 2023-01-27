@@ -636,6 +636,9 @@ func TestMemberServiceImpl_FindByEmail(t *testing.T) {
 				NickName: "test",
 				Call:     "test",
 			}, false},
+		{"failed, query error", fields{mockCommand{}, mockQueryFailed2{}, nil},
+			args{"fail@fail.fail"},
+			FindDto{}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
