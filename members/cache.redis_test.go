@@ -37,7 +37,7 @@ func (m mockRdsClient) Set(context.Context, string, interface{}, time.Duration) 
 	return &redis.StatusCmd{}
 }
 func (m mockRdsClient) Get(context.Context, string) *redis.StringCmd {
-	return nil
+	return &redis.StringCmd{}
 }
 
 func TestRC_Logout(t *testing.T) {
@@ -133,6 +133,46 @@ func Test_cacheValidImpl_err(t *testing.T) {
 			ca := cacheValidImpl{}
 			if err := ca.err(tt.args.e); (err != nil) != tt.wantErr {
 				t.Errorf("err() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+type mockCacheValidImpl struct{}
+
+func (mockCacheValidImpl) isOne(string) bool  { return true }
+func (mockCacheValidImpl) isError(error) bool { return false }
+func (mockCacheValidImpl) err(error) error    { return nil }
+
+func TestRC_Valid(t *testing.T) {
+	ctx := context.Background()
+
+	type fields struct {
+		rdb        RdsClient
+		ctx        cache.Context
+		cacheValid cacheValid
+	}
+	type args struct {
+		token string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"success", fields{mockRdsClient{}, ctx, mockCacheValidImpl{}},
+			args{}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := RC{
+				rdb:        tt.fields.rdb,
+				ctx:        tt.fields.ctx,
+				cacheValid: tt.fields.cacheValid,
+			}
+			if err := r.Valid(tt.args.token); (err != nil) != tt.wantErr {
+				t.Errorf("Valid() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
