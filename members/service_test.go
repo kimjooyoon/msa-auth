@@ -40,6 +40,10 @@ func (q mockQuery) FindByEmail(_ string) (m *Members, e error) {
 	return &Members{
 		Email:    "test@email.com",
 		Password: string(hashedPassword),
+		Model:    util.Model{ID: 7},
+		Name:     "test",
+		NickName: "test",
+		Call:     "test",
 	}, nil
 }
 
@@ -602,6 +606,51 @@ func TestMemberServiceImpl_FindMember_Failed(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("FindMember() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMemberServiceImpl_FindByEmail(t *testing.T) {
+	type fields struct {
+		command Command
+		query   Query
+		rds     R
+	}
+	type args struct {
+		email string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    FindDto
+		wantErr bool
+	}{
+		{"success", fields{mockCommand{}, mockQuery{}, nil},
+			args{"test@email.com"},
+			FindDto{
+				Id:       7,
+				Email:    "test@email.com",
+				Name:     "test",
+				NickName: "test",
+				Call:     "test",
+			}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := MemberServiceImpl{
+				command: tt.fields.command,
+				query:   tt.fields.query,
+				rds:     tt.fields.rds,
+			}
+			got, err := s.FindByEmail(tt.args.email)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindByEmail() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FindByEmail() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
