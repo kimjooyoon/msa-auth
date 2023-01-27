@@ -56,8 +56,6 @@ func TestRC_Logout(t *testing.T) {
 	}{
 		{"success", fields{mockRdsClient{}, ctx}, args{""},
 			false},
-		{"success", fields{mockRdsClient{}, ctx}, args{""},
-			false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
