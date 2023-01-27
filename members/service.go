@@ -45,7 +45,6 @@ func (s MemberServiceImpl) SignOn(dto SignOnDto) (int64, error) {
 
 	hashedPassword, err2 := bcrypt.GenerateFromPassword([]byte(dto.Password), 10)
 	if err2 != nil {
-		//todo: Test
 		return 0, err2
 	}
 	return s.command.Create(Members{
