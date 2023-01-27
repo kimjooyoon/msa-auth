@@ -1,10 +1,12 @@
 package members
 
 import (
+	"context"
 	"errors"
 	"github.com/go-redis/redis/v9"
 	"msa-auth/cache"
 	"msa-auth/util/jwt"
+	"time"
 )
 
 type R interface {
@@ -13,8 +15,12 @@ type R interface {
 }
 
 type RC struct {
-	rdb *redis.Client
+	rdb RdsClient
 	ctx cache.Context
+}
+type RdsClient interface {
+	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	Get(ctx context.Context, key string) *redis.StringCmd
 }
 
 func NewRedis(r *redis.Client, ctx cache.Context) R {
