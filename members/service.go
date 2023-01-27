@@ -143,7 +143,6 @@ func (s MemberServiceImpl) UpdateMyInfo(id int64, dto UpdateMyInfoDto) error {
 
 	err3 := s.command.Update(*member)
 	if err3 != nil {
-		//todo: Test
 		return err3
 	}
 	return nil
