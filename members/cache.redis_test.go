@@ -1,10 +1,12 @@
 package members
 
 import (
+	"context"
 	"github.com/go-redis/redis/v9"
 	"msa-auth/cache"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestNewRedis(t *testing.T) {
@@ -23,6 +25,48 @@ func TestNewRedis(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewRedis(tt.args.r, tt.args.ctx); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewRedis() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type mockRdsClient struct{}
+
+func (m mockRdsClient) Set(
+	ctx context.Context, key string,
+	value interface{}, expiration time.Duration) *redis.StatusCmd {
+	return &redis.StatusCmd{}
+}
+func (m mockRdsClient) Get(ctx context.Context, key string) *redis.StringCmd {
+	return nil
+}
+
+func TestRC_Logout(t *testing.T) {
+	ctx := context.Background()
+	type fields struct {
+		rdb RdsClient
+		ctx cache.Context
+	}
+	type args struct {
+		token string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"success", fields{mockRdsClient{}, ctx}, args{""},
+			false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := RC{
+				rdb: tt.fields.rdb,
+				ctx: tt.fields.ctx,
+			}
+			if err := r.Logout(tt.args.token); (err != nil) != tt.wantErr {
+				t.Errorf("Logout() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
