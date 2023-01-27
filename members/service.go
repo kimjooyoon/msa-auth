@@ -127,7 +127,6 @@ func (s MemberServiceImpl) FindByEmail(email string) (FindDto, error) {
 func (s MemberServiceImpl) UpdateMyInfo(id int64, dto UpdateMyInfoDto) error {
 	member, err1 := s.query.FindById(id)
 	if err1 != nil {
-		//todo: Test
 		return err1
 	}
 
