@@ -87,7 +87,6 @@ func (s MemberServiceImpl) GetTokenBySignIn(dto SignInDto) (string, error) {
 }
 
 func (s MemberServiceImpl) ValidToken(token string) error {
-	//todo: Test
 	return s.rds.Valid(token)
 }
 
