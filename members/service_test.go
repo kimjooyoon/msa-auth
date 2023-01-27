@@ -163,6 +163,39 @@ func Test_signOnValid(t *testing.T) {
 			}},
 			true,
 		},
+		{
+			"failed, name is empty'",
+			args{SignOnDto{
+				Email:    "test",
+				Password: "test1234",
+				Name:     "",
+				NickName: "test",
+				Call:     "test",
+			}},
+			true,
+		},
+		{
+			"failed, nick-name is empty'",
+			args{SignOnDto{
+				Email:    "test",
+				Password: "test1234",
+				Name:     "test",
+				NickName: "",
+				Call:     "test",
+			}},
+			true,
+		},
+		{
+			"failed, call is empty'",
+			args{SignOnDto{
+				Email:    "test",
+				Password: "test1234",
+				Name:     "test",
+				NickName: "test",
+				Call:     "",
+			}},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

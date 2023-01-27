@@ -64,15 +64,12 @@ func signOnValid(dto SignOnDto) error {
 		return errors.New("not valid email")
 	}
 	if dto.Name == "" {
-		//todo: Test
 		return errors.New("not valid name")
 	}
 	if dto.NickName == "" {
-		//todo: Test
 		return errors.New("not valid nick-name")
 	}
 	if dto.Call == "" {
-		//todo: Test
 		return errors.New("not valid call")
 	}
 	return nil
