@@ -682,6 +682,8 @@ func TestMemberServiceImpl_UpdateMyInfo(t *testing.T) {
 				NickName: "test",
 				Call:     "test",
 			}}, false},
+		{"failed, query error", fields{mockCommand{}, mockQueryFailed{}, nil},
+			args{}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
