@@ -2,6 +2,7 @@ package members
 
 import (
 	"context"
+	"errors"
 	"github.com/go-redis/redis/v9"
 	"msa-auth/cache"
 	"reflect"
@@ -65,6 +66,73 @@ func TestRC_Logout(t *testing.T) {
 			}
 			if err := r.Logout(tt.args.token); (err != nil) != tt.wantErr {
 				t.Errorf("Logout() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_cacheValidImpl_isOne(t *testing.T) {
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{"success", args{"1"}, true},
+		{"failed, 2 is not 1", args{"2"}, false},
+		{"failed, empty is not 1", args{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ca := cacheValidImpl{}
+			if got := ca.isOne(tt.args.s); got != tt.want {
+				t.Errorf("isOne() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_cacheValidImpl_isError(t *testing.T) {
+	type args struct {
+		e error
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{"success", args{errors.New("error")}, true},
+		{"success2", args{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ca := cacheValidImpl{}
+			if got := ca.isError(tt.args.e); got != tt.want {
+				t.Errorf("isError() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_cacheValidImpl_err(t *testing.T) {
+	type args struct {
+		e error
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"success", args{errors.New("errors")}, true},
+		{"success2", args{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ca := cacheValidImpl{}
+			if err := ca.err(tt.args.e); (err != nil) != tt.wantErr {
+				t.Errorf("err() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
