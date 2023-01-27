@@ -32,12 +32,10 @@ func TestNewRedis(t *testing.T) {
 
 type mockRdsClient struct{}
 
-func (m mockRdsClient) Set(
-	ctx context.Context, key string,
-	value interface{}, expiration time.Duration) *redis.StatusCmd {
+func (m mockRdsClient) Set(context.Context, string, interface{}, time.Duration) *redis.StatusCmd {
 	return &redis.StatusCmd{}
 }
-func (m mockRdsClient) Get(ctx context.Context, key string) *redis.StringCmd {
+func (m mockRdsClient) Get(context.Context, string) *redis.StringCmd {
 	return nil
 }
 
@@ -56,6 +54,8 @@ func TestRC_Logout(t *testing.T) {
 		args    args
 		wantErr bool
 	}{
+		{"success", fields{mockRdsClient{}, ctx}, args{""},
+			false},
 		{"success", fields{mockRdsClient{}, ctx}, args{""},
 			false},
 	}
