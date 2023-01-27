@@ -37,7 +37,6 @@ func (s MemberServiceImpl) SignOn(dto SignOnDto) (int64, error) {
 
 	count, err1 := s.query.CountByEmail(dto.Email)
 	if count > 0 {
-		//todo: Test
 		return 0, errors.New("already email")
 	}
 	if err1 != nil {
