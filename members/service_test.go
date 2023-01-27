@@ -2,6 +2,7 @@ package members
 
 import (
 	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"testing"
 )
 
@@ -25,7 +26,12 @@ func (q mockQuery) CountByEmail(string) (int64, error) {
 	return 0, nil
 }
 func (q mockQuery) FindByEmail(_ string) (m *Members, e error) {
-	return &Members{}, nil
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("test"), 10)
+
+	return &Members{
+		Email:    "test@email.com",
+		Password: string(hashedPassword),
+	}, nil
 }
 
 func TestMemberService_SignOn(t *testing.T) {
@@ -304,6 +310,53 @@ func TestMemberServiceImpl_SignOn_Failed(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("SignOn() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMemberServiceImpl_GetTokenBySignIn(t *testing.T) {
+
+	type fields struct {
+		command Command
+		query   Query
+		rds     R
+	}
+	type args struct {
+		dto SignInDto
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"success", fields{
+			command: mockCommand{},
+			query:   mockQuery{},
+			rds:     nil,
+		},
+			args{SignInDto{
+				Email:    "test@email.com",
+				Password: "test",
+			}},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := MemberServiceImpl{
+				command: tt.fields.command,
+				query:   tt.fields.query,
+				rds:     tt.fields.rds,
+			}
+			got, err := s.GetTokenBySignIn(tt.args.dto)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetTokenBySignIn() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got == "" {
+				t.Errorf("GetTokenBySignIn() return is empty")
 			}
 		})
 	}

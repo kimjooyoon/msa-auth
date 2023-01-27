@@ -76,7 +76,6 @@ func signOnValid(dto SignOnDto) error {
 }
 
 func (s MemberServiceImpl) GetTokenBySignIn(dto SignInDto) (string, error) {
-	//todo: Test
 	m, err1 := s.query.FindByEmail(dto.Email)
 	if err1 != nil {
 		//todo: Test
@@ -86,7 +85,6 @@ func (s MemberServiceImpl) GetTokenBySignIn(dto SignInDto) (string, error) {
 		//todo: Test
 		return "", err2
 	}
-	//todo: Test
 	return jwt.CreateToken(m.ID, m.Email)
 }
 
