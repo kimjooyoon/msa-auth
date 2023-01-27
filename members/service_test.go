@@ -316,7 +316,6 @@ func TestMemberServiceImpl_SignOn_Failed(t *testing.T) {
 }
 
 func TestMemberServiceImpl_GetTokenBySignIn(t *testing.T) {
-
 	type fields struct {
 		command Command
 		query   Query
@@ -355,7 +354,69 @@ func TestMemberServiceImpl_GetTokenBySignIn(t *testing.T) {
 				t.Errorf("GetTokenBySignIn() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if got == "" {
+			if ((err != nil) != tt.wantErr) && got == "" {
+				t.Errorf("GetTokenBySignIn() return is empty")
+			}
+		})
+	}
+}
+
+type mockQueryFailed2 struct{}
+
+func (q mockQueryFailed2) FindById(id int64) (m *Members, e error) {
+	return &Members{}, nil
+}
+
+func (q mockQueryFailed2) CountByEmail(string) (int64, error) {
+	return 0, nil
+}
+func (q mockQueryFailed2) FindByEmail(s string) (m *Members, e error) {
+	if s == "fail@fail.fail" {
+		return nil, errors.New("error")
+	}
+	return nil, nil
+}
+
+func TestMemberServiceImpl_GetTokenBySignIn_Failed(t *testing.T) {
+	type fields struct {
+		command Command
+		query   Query
+		rds     R
+	}
+	type args struct {
+		dto SignInDto
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"failed, query error", fields{
+			command: mockCommand{},
+			query:   mockQueryFailed2{},
+			rds:     nil,
+		},
+			args{SignInDto{
+				Email:    "fail@fail.fail",
+				Password: "test",
+			}},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := MemberServiceImpl{
+				command: tt.fields.command,
+				query:   tt.fields.query,
+				rds:     tt.fields.rds,
+			}
+			got, err := s.GetTokenBySignIn(tt.args.dto)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetTokenBySignIn() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if ((err != nil) != tt.wantErr) && got == "" {
 				t.Errorf("GetTokenBySignIn() return is empty")
 			}
 		})
