@@ -660,6 +660,8 @@ func TestMemberServiceImpl_FindByEmail(t *testing.T) {
 }
 
 func TestMemberServiceImpl_UpdateMyInfo(t *testing.T) {
+	var bigstring = "aaaaaaaaaaaaaaaaaadsnjfnasdjfnsadfjnsdafjnsadfjdsnfjdsnfjdsfnjadsfnsdjfndsjfnsdjfn"
+
 	type fields struct {
 		command Command
 		query   Query
@@ -684,6 +686,8 @@ func TestMemberServiceImpl_UpdateMyInfo(t *testing.T) {
 			}}, false},
 		{"failed, query error", fields{mockCommand{}, mockQueryFailed{}, nil},
 			args{}, true},
+		{"failed, len(password) > 72", fields{mockCommand{}, mockQuery{}, nil},
+			args{7, UpdateMyInfoDto{Password: bigstring}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
