@@ -10,14 +10,14 @@ func (m mockCommand) Update(members Members) error {
 	return nil
 }
 
+func (m mockCommand) Create(Members) (int64, error) {
+	return 1, nil
+}
+
 type mockQuery struct{}
 
 func (q mockQuery) FindById(id int64) (m *Members, e error) {
 	return &Members{}, nil
-}
-
-func (m mockCommand) Create(Members) (int64, error) {
-	return 1, nil
 }
 
 func (q mockQuery) CountByEmail(string) (int64, error) {
@@ -167,6 +167,71 @@ func Test_signOnValid(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := signOnValid(tt.args.dto); (err != nil) != tt.wantErr {
 				t.Errorf("signOnValid() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+type mockQueryFailed struct{}
+
+func (q mockQueryFailed) FindById(id int64) (m *Members, e error) {
+	return &Members{}, nil
+}
+
+func (q mockQueryFailed) CountByEmail(string) (int64, error) {
+	return 100, nil
+}
+func (q mockQueryFailed) FindByEmail(_ string) (m *Members, e error) {
+	return &Members{}, nil
+}
+
+func TestMemberServiceImpl_SignOn_Failed(t *testing.T) {
+	type fields struct {
+		command Command
+		query   Query
+		rds     R
+	}
+	type args struct {
+		dto SignOnDto
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    int64
+		wantErr bool
+	}{
+		{"fail, count > 0",
+			fields{
+				command: mockCommand{},
+				query:   mockQueryFailed{},
+				rds:     nil,
+			},
+			args{dto: SignOnDto{
+				Email:    "asketeddy@gmail.com",
+				Password: "test1234",
+				Name:     "tester",
+				NickName: "nick",
+				Call:     "010-0000-0000",
+			}},
+			0,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := MemberServiceImpl{
+				command: tt.fields.command,
+				query:   tt.fields.query,
+				rds:     tt.fields.rds,
+			}
+			got, err := s.SignOn(tt.args.dto)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SignOn() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("SignOn() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
