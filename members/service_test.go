@@ -198,6 +198,9 @@ func TestMemberServiceImpl_SignOn_Failed(t *testing.T) {
 	type args struct {
 		dto SignOnDto
 	}
+
+	var bigstring = "aaaaaaaaaaaaaaaaaadsnjfnasdjfnsadfjnsdafjnsadfjdsnfjdsnfjdsfnjadsfnsdjfndsjfnsdjfn"
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -230,6 +233,22 @@ func TestMemberServiceImpl_SignOn_Failed(t *testing.T) {
 			args{dto: SignOnDto{
 				Email:    "admin@test.test",
 				Password: "test1234",
+				Name:     "tester",
+				NickName: "nick",
+				Call:     "010-0000-0000",
+			}},
+			0,
+			true,
+		},
+		{"fail, len(password) > 72",
+			fields{
+				command: mockCommand{},
+				query:   mockQuery{},
+				rds:     nil,
+			},
+			args{dto: SignOnDto{
+				Email:    "admin@test.test",
+				Password: bigstring,
 				Name:     "tester",
 				NickName: "nick",
 				Call:     "010-0000-0000",
