@@ -40,7 +40,6 @@ func (s MemberServiceImpl) SignOn(dto SignOnDto) (int64, error) {
 		return 0, errors.New("already email")
 	}
 	if err1 != nil {
-		//todo: Test
 		return 0, err1
 	}
 
