@@ -140,9 +140,21 @@ func Test_cacheValidImpl_err(t *testing.T) {
 
 type mockCacheValidImpl struct{}
 
-func (mockCacheValidImpl) isOne(string) bool  { return true }
+func (mockCacheValidImpl) isOne(string) bool  { return false }
 func (mockCacheValidImpl) isError(error) bool { return false }
 func (mockCacheValidImpl) err(error) error    { return nil }
+
+type mockCacheValidImplFailed1 struct{}
+
+func (mockCacheValidImplFailed1) isOne(string) bool  { return false }
+func (mockCacheValidImplFailed1) isError(error) bool { return true }
+func (mockCacheValidImplFailed1) err(error) error    { return errors.New("error") }
+
+type mockCacheValidImplFailed_TokenInBlackList struct{}
+
+func (mockCacheValidImplFailed_TokenInBlackList) isOne(string) bool  { return true }
+func (mockCacheValidImplFailed_TokenInBlackList) isError(error) bool { return false }
+func (mockCacheValidImplFailed_TokenInBlackList) err(error) error    { return nil }
 
 func TestRC_Valid(t *testing.T) {
 	ctx := context.Background()
@@ -162,6 +174,10 @@ func TestRC_Valid(t *testing.T) {
 		wantErr bool
 	}{
 		{"success", fields{mockRdsClient{}, ctx, mockCacheValidImpl{}},
+			args{}, false},
+		{"failed, isError", fields{mockRdsClient{}, ctx, mockCacheValidImplFailed1{}},
+			args{}, true},
+		{"failed, token in black list", fields{mockRdsClient{}, ctx, mockCacheValidImplFailed_TokenInBlackList{}},
 			args{}, true},
 	}
 	for _, tt := range tests {
