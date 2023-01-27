@@ -224,7 +224,7 @@ func Test_signOnValid(t *testing.T) {
 type mockQueryFailed struct{}
 
 func (q mockQueryFailed) FindById(id int64) (m *Members, e error) {
-	return &Members{}, nil
+	return &Members{}, errors.New("errorG")
 }
 
 func (q mockQueryFailed) CountByEmail(email string) (int64, error) {
@@ -548,6 +548,45 @@ func TestMemberServiceImpl_FindMember(t *testing.T) {
 			Call:     "test",
 		},
 		false,
+	}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := MemberServiceImpl{
+				command: tt.fields.command,
+				query:   tt.fields.query,
+				rds:     tt.fields.rds,
+			}
+			got, err := s.FindMember(tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindMember() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FindMember() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMemberServiceImpl_FindMember_Failed(t *testing.T) {
+	type fields struct {
+		command Command
+		query   Query
+		rds     R
+	}
+	type args struct {
+		id int64
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    FindDto
+		wantErr bool
+	}{{"failed, query error", fields{mockCommand{}, mockQueryFailed{}, nil},
+		args{7},
+		FindDto{},
+		true,
 	}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
