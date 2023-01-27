@@ -132,7 +132,6 @@ func (s MemberServiceImpl) UpdateMyInfo(id int64, dto UpdateMyInfoDto) error {
 
 	hashedPassword, err2 := bcrypt.GenerateFromPassword([]byte(dto.Password), 10)
 	if err2 != nil {
-		//todo: Test
 		return err2
 	}
 
