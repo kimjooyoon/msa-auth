@@ -28,12 +28,7 @@ func NewRedis(r *redis.Client, ctx cache.Context) R {
 }
 
 func (r RC) Logout(token string) error {
-	err1 := r.rdb.Set(r.ctx, token, "1", jwt.ExpiresTime).Err()
-	if err1 != nil {
-		return err1
-	}
-
-	return nil
+	return r.rdb.Set(r.ctx, token, "1", jwt.ExpiresTime).Err()
 }
 
 func (r RC) Valid(token string) error {
