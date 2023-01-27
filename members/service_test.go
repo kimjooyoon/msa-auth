@@ -658,3 +658,41 @@ func TestMemberServiceImpl_FindByEmail(t *testing.T) {
 		})
 	}
 }
+
+func TestMemberServiceImpl_UpdateMyInfo(t *testing.T) {
+	type fields struct {
+		command Command
+		query   Query
+		rds     R
+	}
+	type args struct {
+		id  int64
+		dto UpdateMyInfoDto
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{"success", fields{mockCommand{}, mockQuery{}, nil},
+			args{7, UpdateMyInfoDto{
+				Password: "test",
+				Name:     "test",
+				NickName: "test",
+				Call:     "test",
+			}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := MemberServiceImpl{
+				command: tt.fields.command,
+				query:   tt.fields.query,
+				rds:     tt.fields.rds,
+			}
+			if err := s.UpdateMyInfo(tt.args.id, tt.args.dto); (err != nil) != tt.wantErr {
+				t.Errorf("UpdateMyInfo() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
