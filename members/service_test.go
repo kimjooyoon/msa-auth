@@ -433,3 +433,50 @@ func TestMemberServiceImpl_GetTokenBySignIn_Failed(t *testing.T) {
 		})
 	}
 }
+
+type mockRds struct{}
+
+func (m mockRds) Logout(token string) error {
+	return nil
+}
+func (m mockRds) Valid(token string) error {
+	return nil
+}
+
+func TestMemberServiceImpl_ValidToken(t *testing.T) {
+	type fields struct {
+		command Command
+		query   Query
+		rds     R
+	}
+	type args struct {
+		token string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"success",
+			fields{
+				command: nil,
+				query:   nil,
+				rds:     mockRds{},
+			}, args{}, false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := MemberServiceImpl{
+				command: tt.fields.command,
+				query:   tt.fields.query,
+				rds:     tt.fields.rds,
+			}
+			if err := s.ValidToken(tt.args.token); (err != nil) != tt.wantErr {
+				t.Errorf("ValidToken() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
