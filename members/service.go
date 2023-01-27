@@ -78,7 +78,6 @@ func signOnValid(dto SignOnDto) error {
 func (s MemberServiceImpl) GetTokenBySignIn(dto SignInDto) (string, error) {
 	m, err1 := s.query.FindByEmail(dto.Email)
 	if err1 != nil {
-		//todo: Test
 		return "", err1
 	}
 	if err2 := bcrypt.CompareHashAndPassword([]byte(m.Password), []byte(dto.Password)); err2 != nil {
@@ -116,8 +115,10 @@ func (s MemberServiceImpl) FindMember(id int64) (FindDto, error) {
 }
 
 func (s MemberServiceImpl) FindByEmail(email string) (FindDto, error) {
+	//todo: Test
 	m, err1 := s.query.FindByEmail(email)
 	if err1 != nil {
+		//todo: Test
 		return FindDto{}, err1
 	}
 
@@ -131,13 +132,16 @@ func (s MemberServiceImpl) FindByEmail(email string) (FindDto, error) {
 }
 
 func (s MemberServiceImpl) UpdateMyInfo(id int64, dto UpdateMyInfoDto) error {
+	//todo: Test
 	member, err1 := s.query.FindById(id)
 	if err1 != nil {
+		//todo: Test
 		return err1
 	}
 
 	hashedPassword, err2 := bcrypt.GenerateFromPassword([]byte(dto.Password), 10)
 	if err2 != nil {
+		//todo: Test
 		return err2
 	}
 
@@ -149,6 +153,7 @@ func (s MemberServiceImpl) UpdateMyInfo(id int64, dto UpdateMyInfoDto) error {
 
 	err3 := s.command.Update(*member)
 	if err3 != nil {
+		//todo: Test
 		return err3
 	}
 	return nil
