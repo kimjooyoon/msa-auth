@@ -17,29 +17,41 @@ type R interface {
 type RC struct {
 	rdb RdsClient
 	ctx cache.Context
+	cacheValid
 }
+
+type cacheValid interface {
+	isOne(string) bool
+	isError(error) bool
+	err(e error) error
+}
+
+type cacheValidImpl struct{}
+
 type RdsClient interface {
 	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
 	Get(ctx context.Context, key string) *redis.StringCmd
 }
 
 func NewRedis(r *redis.Client, ctx cache.Context) R {
-	return RC{r, ctx}
+	return RC{r, ctx, cacheValidImpl{}}
 }
 
 func (r RC) Logout(token string) error {
 	return r.rdb.Set(r.ctx, token, "1", jwt.ExpiresTime).Err()
 }
 
+func (cacheValidImpl) isOne(s string) bool  { return s == "1" }
+func (cacheValidImpl) isError(e error) bool { return e != nil }
+func (cacheValidImpl) err(e error) error    { return e }
+
 func (r RC) Valid(token string) error {
 	val, err1 := r.rdb.Get(r.ctx, token).Result()
-	if val == "" {
-		return nil
+	if r.isError(err1) {
+		return r.err(err1)
 	}
-	if err1 != nil {
-		return err1
-	}
-	if val == "1" {
+
+	if r.isOne(val) {
 		return errors.New("token in black list")
 	}
 
