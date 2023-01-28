@@ -141,6 +141,17 @@ func (r Controller) SearchUser(c *gin.Context) {
 	return
 }
 
+func (r Controller) GetUserList(c *gin.Context) {
+	dtos, err1 := r.service.FindByAll()
+	if err1 != nil {
+		c.JSON(api.ServerErrorWithError(err1))
+		return
+	}
+
+	c.JSON(api.OkWithObject(dtos))
+	return
+}
+
 func (r Controller) SearchByEmail(c *gin.Context) {
 	email := c.Query("email")
 	if email == "" {
