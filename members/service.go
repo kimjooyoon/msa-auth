@@ -12,6 +12,7 @@ type MemberService interface {
 	GetTokenBySignIn(dto SignInDto) (string, error)
 	FindMember(id int64) (FindDto, error)
 	FindByEmail(email string) (FindDto, error)
+	FindByAll() ([]FindDto, error)
 
 	ValidToken(token string) error
 	Logout(token string) error
@@ -107,6 +108,23 @@ func (s MemberServiceImpl) FindMember(id int64) (FindDto, error) {
 		NickName: m.NickName,
 		Call:     m.Call,
 	}, nil
+}
+
+func (s MemberServiceImpl) FindByAll() ([]FindDto, error) {
+	m, err1 := s.query.FindAll()
+	r := make([]FindDto, len(*m))
+
+	for i, member := range *m {
+		r[i] = FindDto{
+			Id:       member.ID,
+			Email:    member.Email,
+			Name:     member.Name,
+			NickName: member.NickName,
+			Call:     member.Call,
+		}
+	}
+
+	return r, err1
 }
 
 func (s MemberServiceImpl) FindByEmail(email string) (FindDto, error) {
