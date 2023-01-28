@@ -20,6 +20,15 @@ func (m mockCommand) Create(Members) (int64, error) {
 
 type mockQuery struct{}
 
+func (q mockQuery) FindAll() (m *[]Members, e error) {
+	return &[]Members{
+		{util.Model{ID: 1}, "test1", "test1", "test1", "test1", "test1"},
+		{util.Model{ID: 2}, "test2", "test2", "test2", "test2", "test2"},
+		{util.Model{ID: 3}, "test3", "test3", "test3", "test3", "test3"},
+		{util.Model{ID: 4}, "test4", "test4", "test4", "test4", "test4"},
+	}, nil
+}
+
 func (q mockQuery) FindById(id int64) (m *Members, e error) {
 	return &Members{
 		Model:    util.Model{ID: 7},
@@ -227,6 +236,11 @@ func Test_signOnValid(t *testing.T) {
 
 type mockQueryFailed struct{}
 
+func (q mockQueryFailed) FindAll() (m *[]Members, e error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (q mockQueryFailed) FindById(id int64) (m *Members, e error) {
 	return &Members{}, errors.New("errorG")
 }
@@ -375,6 +389,11 @@ func TestMemberServiceImpl_GetTokenBySignIn(t *testing.T) {
 }
 
 type mockQueryFailed2 struct{}
+
+func (q mockQueryFailed2) FindAll() (m *[]Members, e error) {
+	//TODO implement me
+	panic("implement me")
+}
 
 func (q mockQueryFailed2) FindById(id int64) (m *Members, e error) {
 	return &Members{}, nil
@@ -734,6 +753,43 @@ func TestNewService(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NewService(tt.args.command, tt.args.query, tt.args.r); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewService() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMemberServiceImpl_FindByAll(t *testing.T) {
+	type fields struct {
+		command Command
+		query   Query
+		rds     R
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		want    []FindDto
+		wantErr bool
+	}{
+		{"success", fields{mockCommand{}, mockQuery{}, nil},
+			[]FindDto{{1, "test1", "test1", "test1", "test1"},
+				{2, "test2", "test2", "test2", "test2"},
+				{3, "test3", "test3", "test3", "test3"},
+				{4, "test4", "test4", "test4", "test4"}}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := MemberServiceImpl{
+				command: tt.fields.command,
+				query:   tt.fields.query,
+				rds:     tt.fields.rds,
+			}
+			got, err := s.FindByAll()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindByAll() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("FindByAll() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
