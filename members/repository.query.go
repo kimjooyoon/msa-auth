@@ -6,6 +6,7 @@ type Query interface {
 	CountByEmail(email string) (int64, error)
 	FindByEmail(email string) (m *Members, e error)
 	FindById(id int64) (m *Members, e error)
+	FindAll() (m *[]Members, e error)
 }
 
 type MemberQuery struct {
@@ -31,4 +32,9 @@ func (q MemberQuery) FindByEmail(email string) (m *Members, e error) {
 func (q MemberQuery) FindById(id int64) (m *Members, e error) {
 	err1 := q.DB.Where("id = ?", id).First(&m).Error
 	return m, err1
+}
+
+func (q MemberQuery) FindAll() (m *[]Members, e error) {
+	e = q.DB.Find(&m).Error
+	return m, e
 }
