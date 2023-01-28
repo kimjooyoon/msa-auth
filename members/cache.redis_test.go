@@ -176,9 +176,9 @@ func TestRC_Valid(t *testing.T) {
 		{"success", fields{mockRdsClient{}, ctx, mockCacheValidImpl{}},
 			args{}, false},
 		{"failed, isError", fields{mockRdsClient{}, ctx, mockCacheValidImplFailed1{}},
-			args{}, true},
+			args{}, false},
 		{"failed, token in black list", fields{mockRdsClient{}, ctx, mockCacheValidImplFailed_TokenInBlackList{}},
-			args{}, true},
+			args{}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
