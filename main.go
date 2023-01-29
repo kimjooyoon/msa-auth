@@ -4,6 +4,7 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"msa-auth/api"
+	"msa-auth/database"
 	"os"
 )
 
@@ -17,4 +18,5 @@ func main() {
 	allowOrigin := os.Getenv("AllowOrigin")
 
 	api.RunServer(release == "true", allowOrigin)
+	defer database.Clear()
 }

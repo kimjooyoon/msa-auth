@@ -24,7 +24,19 @@ func MysqlConnection(dataSourceName DSN) *gorm.DB {
 		return db
 	}
 	newDb, err := gorm.Open(mysql.Open(string(dataSourceName)), &gorm.Config{})
+	if err != nil {
+		log.Panicf("%v", err)
+	}
+	sqlDB, e1 := newDb.DB()
+	if e1 != nil {
+		log.Panicf("%v", e1)
+	}
 
+	errPing := sqlDB.Ping()
+	if errPing != nil {
+		fmt.Printf("not connection")
+		log.Panicf("%v", e1)
+	}
 	if err != nil {
 		log.Panicf("new mysql connection err\nerr=%v", err)
 		return nil
@@ -32,6 +44,23 @@ func MysqlConnection(dataSourceName DSN) *gorm.DB {
 	db = newDb
 
 	return db
+}
+
+func Clear() {
+	if db == nil {
+		return
+	}
+
+	a, e := db.DB()
+	if e != nil {
+		log.Panicf("%v", e)
+	}
+
+	e2 := a.Close()
+	if e2 != nil {
+		log.Panicf("%v", e2)
+	}
+	db = nil
 }
 
 func AutoMigrate() {
@@ -47,6 +76,10 @@ func AutoMigrate() {
 	sqlDB, errDB := db.DB()
 	if errDB != nil {
 		log.Fatalln(errDB)
+	}
+	errPing := sqlDB.Ping()
+	if errPing != nil {
+		fmt.Printf("not connection")
 	}
 
 	defer func(sqlDB *sql.DB) {
