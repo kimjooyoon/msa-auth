@@ -18,5 +18,5 @@ func main() {
 	allowOrigin := os.Getenv("AllowOrigin")
 
 	api.RunServer(release == "true", allowOrigin)
-	database.Clear()
+	defer database.Clear()
 }
