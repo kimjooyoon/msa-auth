@@ -89,3 +89,7 @@ func AutoMigrate() {
 		}
 	}(sqlDB)
 }
+
+func AllDeleteRows() {
+	db.Session(&gorm.Session{AllowGlobalUpdate: true}).Delete(&members.Members{})
+}

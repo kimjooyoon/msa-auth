@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"log"
+	"msa-auth/database"
 	"msa-auth/members"
 	"testing"
 )
 
 func TestIntegration(t *testing.T) {
 	t.Run("integration scenario 1", func(t *testing.T) {
+		database.AllDeleteRows()
 		// sign-on
 		b, err := json.Marshal(members.SignOnDto{
 			"test@test.test", "test",
@@ -19,7 +21,7 @@ func TestIntegration(t *testing.T) {
 			log.Panicf("%v", err)
 		}
 		q, status := ClientE("/sign-on", "POST", b)
-		assert.Equal(t, "{\"message\":\"1\"}", q)
+		assert.Contains(t, q, "message")
 		assert.Equal(t, status, "200 OK")
 
 		// sign-in
@@ -78,6 +80,36 @@ func TestIntegration(t *testing.T) {
 		assert.Contains(t, q, "error")
 		assert.Contains(t, q, "token in black list")
 		assert.Contains(t, q, "message")
+		assert.Contains(t, q, "fail")
+		assert.Equal(t, status, "500 Internal Server Error")
+
+	})
+
+	t.Run("integration scenario 2", func(t *testing.T) {
+		database.AllDeleteRows()
+		// sign-on
+		b, err := json.Marshal(members.SignOnDto{
+			"test@test.test", "test",
+			"tester", "test-user", "01012341234",
+		})
+		if err != nil {
+			log.Panicf("%v", err)
+		}
+		q, status := ClientE("/sign-on", "POST", b)
+		assert.Contains(t, q, "message")
+		assert.Equal(t, status, "200 OK")
+
+		// sign-on (duple)
+		b, err = json.Marshal(members.SignOnDto{
+			"test@test.test", "test",
+			"tester", "test-user", "01012341234",
+		})
+		if err != nil {
+			log.Panicf("%v", err)
+		}
+		q, status = ClientE("/sign-on", "POST", b)
+		assert.Contains(t, q, "already")
+		assert.Contains(t, q, "email")
 		assert.Contains(t, q, "fail")
 		assert.Equal(t, status, "500 Internal Server Error")
 
