@@ -85,4 +85,34 @@ func TestIntegration(t *testing.T) {
 
 	})
 
+	t.Run("integration scenario 2", func(t *testing.T) {
+		database.AllDeleteRows()
+		// sign-on
+		b, err := json.Marshal(members.SignOnDto{
+			"test@test.test", "test",
+			"tester", "test-user", "01012341234",
+		})
+		if err != nil {
+			log.Panicf("%v", err)
+		}
+		q, status := ClientE("/sign-on", "POST", b)
+		assert.Contains(t, q, "message")
+		assert.Equal(t, status, "200 OK")
+
+		// sign-on (duple)
+		b, err = json.Marshal(members.SignOnDto{
+			"test@test.test", "test",
+			"tester", "test-user", "01012341234",
+		})
+		if err != nil {
+			log.Panicf("%v", err)
+		}
+		q, status = ClientE("/sign-on", "POST", b)
+		assert.Contains(t, q, "already")
+		assert.Contains(t, q, "email")
+		assert.Contains(t, q, "fail")
+		assert.Equal(t, status, "500 Internal Server Error")
+
+	})
+
 }
