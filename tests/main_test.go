@@ -1,0 +1,158 @@
+package tests
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"github.com/joho/godotenv"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
+	"io"
+	"log"
+	"msa-auth/api"
+	"msa-auth/database"
+	"msa-auth/members"
+	"net/http"
+	"os"
+	"strconv"
+	"testing"
+	"time"
+)
+
+func mariadbSetUp(ctx context.Context) (testcontainers.Container, int, error) {
+	req := testcontainers.ContainerRequest{
+		Image:        "mariadb:latest",
+		Env:          map[string]string{"MARIADB_ROOT_PASSWORD": "test"},
+		ExposedPorts: []string{"3306/tcp"},
+		WaitingFor:   wait.ForLog("mariadbd: ready for connections."),
+	}
+	mariaC, err1 := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err1 != nil {
+		return nil, 0, err1
+	}
+	port, err2 := mariaC.MappedPort(ctx, "3306/tcp")
+	if err2 != nil {
+		return nil, 0, err2
+	}
+
+	return mariaC, port.Int(), nil
+}
+
+func redisSetUp(ctx context.Context) (testcontainers.Container, int, error) {
+	req := testcontainers.ContainerRequest{
+		Image:        "redis:latest",
+		ExposedPorts: []string{"6379/tcp"},
+		WaitingFor:   wait.ForLog("Ready to accept connections"),
+	}
+	redisC, err1 := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err1 != nil {
+		return nil, 0, err1
+	}
+	port, err2 := redisC.MappedPort(ctx, "6379/tcp")
+	if err2 != nil {
+		return nil, 0, err2
+	}
+
+	return redisC, port.Int(), nil
+}
+
+func TestMain(m *testing.M) {
+	errEnv := godotenv.Load()
+	if errEnv != nil {
+		log.Panicf("Error loading .env file\n%v", errEnv)
+	}
+
+	os.Setenv("PORT", "49999")
+	os.Setenv("HOST", "localhost")
+	ctx := context.Background()
+
+	mariaC, port1, err1 := mariadbSetUp(ctx)
+	if err1 != nil {
+		fmt.Printf("%v", err1)
+	}
+
+	redisC, port2, err2 := redisSetUp(ctx)
+	if err2 != nil {
+		fmt.Printf("%v", err2)
+	}
+	os.Setenv("REDIS_DSN", "localhost:"+strconv.Itoa(port2))
+
+	if err2 != nil {
+		log.Panicf("%v", err2)
+	}
+
+	defer func() {
+		if err := mariaC.Terminate(ctx); err != nil {
+			log.Panicf("%v", err)
+		}
+	}()
+	defer func() {
+		if err := redisC.Terminate(ctx); err != nil {
+			log.Panicf("%v", err)
+		}
+	}()
+	time.Sleep(3 * time.Second)
+	tmp := database.MysqlConnection(database.DSN("root:test@tcp(localhost:" + strconv.Itoa(port1) + ")/sys"))
+	tx := tmp.Exec("create schema msa_auth")
+	database.Clear()
+
+	fmt.Printf("%v", tx)
+
+	os.Setenv("DSN", "root:test@tcp(localhost:"+strconv.Itoa(port1)+
+		")/msa_auth?charset=utf8mb4&parseTime=True&loc=Local")
+	database.AutoMigrate()
+	database.Clear()
+
+	go api.RunServer(false, "*")
+	time.Sleep(3 * time.Second)
+
+	code := m.Run()
+	os.Exit(code)
+}
+
+func TestSignOn(t *testing.T) {
+	t.Run("test", func(t *testing.T) {
+		b, _ := json.Marshal(members.SignOnDto{
+			Email:    "test@test.test",
+			Password: "test",
+			Name:     "tester",
+			NickName: "test-user",
+			Call:     "01012341234",
+		})
+
+		q := ClientE("/sign-on", "POST", b)
+		fmt.Printf("\nq is\n%v\n", q)
+
+	})
+
+}
+
+func ClientE(path, method string, b []byte) string {
+	reqBody := bytes.NewReader(b)
+	url := fmt.Sprintf("http://%s:%s%s", os.Getenv("HOST"), os.Getenv("PORT"), path)
+	c := http.DefaultClient
+	req, err1 := http.NewRequest(method, url, reqBody)
+	if err1 != nil {
+		log.Panicf("%v", err1)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	//req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+	resp, err := c.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	expected := string(respBody)
+	return expected
+}
