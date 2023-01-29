@@ -3,7 +3,6 @@ package tests
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/testcontainers/testcontainers-go"
@@ -12,7 +11,6 @@ import (
 	"log"
 	"msa-auth/api"
 	"msa-auth/database"
-	"msa-auth/members"
 	"net/http"
 	"os"
 	"strconv"
@@ -69,20 +67,29 @@ func TestMain(m *testing.M) {
 		log.Panicf("Error loading .env file\n%v", errEnv)
 	}
 
-	os.Setenv("PORT", "49999")
-	os.Setenv("HOST", "localhost")
+	err := os.Setenv("PORT", "49999")
+	if err != nil {
+		log.Panicf("os.Setenv err\n%v", err)
+	}
+	err = os.Setenv("HOST", "localhost")
+	if err != nil {
+		log.Panicf("os.Setenv err\n%v", err)
+	}
 	ctx := context.Background()
 
 	mariaC, port1, err1 := mariadbSetUp(ctx)
 	if err1 != nil {
-		fmt.Printf("%v", err1)
+		log.Panicf("mariadbSetUp(ctx) err\n%v", err1)
 	}
 
 	redisC, port2, err2 := redisSetUp(ctx)
 	if err2 != nil {
-		fmt.Printf("%v", err2)
+		log.Panicf("redisSetUp(ctx) err\n%v", err2)
 	}
-	os.Setenv("REDIS_DSN", "localhost:"+strconv.Itoa(port2))
+	err2 = os.Setenv("REDIS_DSN", "localhost:"+strconv.Itoa(port2))
+	if err != nil {
+		log.Panicf("os.Setenv(\"REDIS_DSN\", \"localhost:\"+strconv.Itoa(port2)) err\n%v", err2)
+	}
 
 	if err2 != nil {
 		log.Panicf("%v", err2)
@@ -100,13 +107,14 @@ func TestMain(m *testing.M) {
 	}()
 	time.Sleep(3 * time.Second)
 	tmp := database.MysqlConnection(database.DSN("root:test@tcp(localhost:" + strconv.Itoa(port1) + ")/sys"))
-	tx := tmp.Exec("create schema msa_auth")
+	tmp.Exec("create schema msa_auth")
 	database.Clear()
 
-	fmt.Printf("%v", tx)
-
-	os.Setenv("DSN", "root:test@tcp(localhost:"+strconv.Itoa(port1)+
+	err = os.Setenv("DSN", "root:test@tcp(localhost:"+strconv.Itoa(port1)+
 		")/msa_auth?charset=utf8mb4&parseTime=True&loc=Local")
+	if err != nil {
+		log.Panicf("os.Setenv(\"DSN\", \"root:test@tcp(localhost:\"+strconv.Itoa(port1)+\n\t\t\")/msa_auth?charset=utf8mb4&parseTime=True&loc=Local\")\n%v", err)
+	}
 	database.AutoMigrate()
 	database.Clear()
 
@@ -115,23 +123,6 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 	os.Exit(code)
-}
-
-func TestSignOn(t *testing.T) {
-	t.Run("test", func(t *testing.T) {
-		b, _ := json.Marshal(members.SignOnDto{
-			Email:    "test@test.test",
-			Password: "test",
-			Name:     "tester",
-			NickName: "test-user",
-			Call:     "01012341234",
-		})
-
-		q := ClientE("/sign-on", "POST", b)
-		fmt.Printf("\nq is\n%v\n", q)
-
-	})
-
 }
 
 func ClientE(path, method string, b []byte) string {
@@ -148,7 +139,12 @@ func ClientE(path, method string, b []byte) string {
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Panicf("io.ReadCloser error %v", err)
+		}
+	}(resp.Body)
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
