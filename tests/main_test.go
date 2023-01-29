@@ -125,7 +125,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func ClientE(path, method string, b []byte) string {
+func getRequest(path, method string, b []byte) (*http.Client, *http.Request) {
 	reqBody := bytes.NewReader(b)
 	url := fmt.Sprintf("http://%s:%s%s", os.Getenv("HOST"), os.Getenv("PORT"), path)
 	c := http.DefaultClient
@@ -133,6 +133,11 @@ func ClientE(path, method string, b []byte) string {
 	if err1 != nil {
 		log.Panicf("%v", err1)
 	}
+	return c, req
+}
+
+func ClientE(path, method string, b []byte) (string, string) {
+	c, req := getRequest(path, method, b)
 	req.Header.Set("Content-Type", "application/json")
 	//req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 	resp, err := c.Do(req)
@@ -150,5 +155,28 @@ func ClientE(path, method string, b []byte) string {
 		panic(err)
 	}
 	expected := string(respBody)
-	return expected
+	return expected, resp.Status
+}
+
+func ClientToken(path, method string, b []byte, token string) (string, string) {
+	c, req := getRequest(path, method, b)
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("token", token)
+	resp, err := c.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Panicf("io.ReadCloser error %v", err)
+		}
+	}(resp.Body)
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	expected := string(respBody)
+	return expected, resp.Status
 }
