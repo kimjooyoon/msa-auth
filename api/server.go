@@ -4,6 +4,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"log"
+	"os"
 )
 
 var Server *gin.Engine
@@ -27,7 +28,8 @@ func RunServer(mode bool, allowOrigin string) {
 
 	HandlerSetup()
 
-	err := Server.Run()
+	port := os.Getenv("PORT")
+	err := Server.Run("localhost:" + port)
 	if err != nil {
 		log.Panicf("RunServer Error\nerr=%v", err)
 	}

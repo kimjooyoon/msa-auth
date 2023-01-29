@@ -47,6 +47,9 @@ func (cacheValidImpl) err(e error) error    { return e }
 
 func (r RC) Valid(token string) error {
 	val, err1 := r.rdb.Get(r.ctx, token).Result()
+	if val == "" {
+		return nil
+	}
 	if r.isError(err1) {
 		return r.err(err1)
 	}
